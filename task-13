@@ -1,0 +1,107 @@
+import React, { useState, useCallback } from "react";
+import "./App.css";
+
+// ToDoList კომპონენტი, რომელიც მიიღებს დავალებებს როგორც პროპსს და რეაგირებს მხოლოდ ცვლილებებზე
+const ToDoList = React.memo(({ tasks, onComplete }) => {
+  console.log("ToDoList rendered");
+  return (
+    <div className="column">
+      <h2>შესასრულებელი დავალებები</h2>
+      <ul>
+        {tasks.map((task, index) => (
+          <li key={index}>
+            {task}
+            <button onClick={() => onComplete(task)}>დასრულება</button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+});
+
+const CompletedList = React.memo(({ tasks, onReturn, onDelete }) => {
+  console.log("CompletedList rendered");
+  return (
+    <div className="column">
+      <h2>შესრულებული დავალებები</h2>
+      <ul>
+        {tasks.map((task, index) => (
+          <li key={index}>
+            {task}
+            <button onClick={() => onReturn(task)}>დაბრუნება</button>
+            <button onClick={() => onDelete(task)}>წაშლა</button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+});
+
+function App() {
+  const [taskInput, setTaskInput] = useState("");
+  const [toDoTasks, setToDoTasks] = useState([]);
+  const [completedTasks, setCompletedTasks] = useState([]);
+
+  // დავალების დამატება
+  const addTask = useCallback(() => {
+    if (taskInput.trim()) {
+      setToDoTasks((prevTasks) => [...prevTasks, taskInput]);
+      setTaskInput("");
+    }
+  }, [taskInput]);
+
+  // დავალების დასრულება
+  const completeTask = useCallback(
+    (task) => {
+      setToDoTasks((prevTasks) => prevTasks.filter((t) => t !== task));
+      setCompletedTasks((prevTasks) => [...prevTasks, task]);
+    },
+    [toDoTasks, completedTasks]
+  );
+
+  // შესრულებული დავალების დაბრუნება
+  const returnToToDo = useCallback(
+    (task) => {
+      setCompletedTasks((prevTasks) => prevTasks.filter((t) => t !== task));
+      setToDoTasks((prevTasks) => [...prevTasks, task]);
+    },
+    [completedTasks, toDoTasks]
+  );
+
+  // დავალების წაშლა
+  const deleteTask = useCallback(
+    (task) => {
+      setCompletedTasks((prevTasks) => prevTasks.filter((t) => t !== task));
+    },
+    [completedTasks]
+  );
+
+  return (
+    <div className="container">
+      <h1>To Do List</h1>
+      <div className="input-section">
+        <input
+          type="text"
+          value={taskInput}
+          onChange={(e) => setTaskInput(e.target.value)}
+          placeholder="შეიყვანე ახალი დავალება..."
+        />
+        <button onClick={addTask}>დამატება</button>
+      </div>
+
+      <div className="columns">
+        {/* შესასრულებელი დავალებები */}
+        <ToDoList tasks={toDoTasks} onComplete={completeTask} />
+
+        {/* შესრულებული დავალებები */}
+        <CompletedList
+          tasks={completedTasks}
+          onReturn={returnToToDo}
+          onDelete={deleteTask}
+        />
+      </div>
+    </div>
+  );
+}
+
+export default App;
