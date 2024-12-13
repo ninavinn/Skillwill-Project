@@ -1,0 +1,92 @@
+import React, { useState, useCallback } from "react";
+import "./App.css";
+
+// დავალების კომპონენტი (შეიძლება იყოს ოპტიმიზებული React.memo-ით)
+const Task = React.memo(({ task, onComplete, onReturn, onDelete }) => {
+  return (
+    <li>
+      {task}
+      {onComplete && <button onClick={() => onComplete(task)}>დასრულება</button>}
+      {onReturn && <button onClick={() => onReturn(task)}>დაბრუნება</button>}
+      {onDelete && <button onClick={() => onDelete(task)}>წაშლა</button>}
+    </li>
+  );
+});
+
+function App() {
+  const [taskInput, setTaskInput] = useState("");
+  const [toDoTasks, setToDoTasks] = useState([]);
+  const [completedTasks, setCompletedTasks] = useState([]);
+
+  // დავალების დამატება
+  const addTask = useCallback(() => {
+    if (taskInput.trim()) {
+      setToDoTasks((prevTasks) => [...prevTasks, taskInput]);
+      setTaskInput("");
+    }
+  }, [taskInput]);
+
+  // დავალების დასრულება
+  const completeTask = useCallback((task) => {
+    setToDoTasks((prevTasks) => prevTasks.filter((t) => t !== task));
+    setCompletedTasks((prevCompletedTasks) => [...prevCompletedTasks, task]);
+  }, []);
+
+  // შესრულებული დავალების დაბრუნება
+  const returnToToDo = useCallback((task) => {
+    setCompletedTasks((prevCompletedTasks) => prevCompletedTasks.filter((t) => t !== task));
+    setToDoTasks((prevTasks) => [...prevTasks, task]);
+  }, []);
+
+  // დავალების წაშლა
+  const deleteTask = useCallback((task) => {
+    setCompletedTasks((prevCompletedTasks) => prevCompletedTasks.filter((t) => t !== task));
+  }, []);
+
+  return (
+    <div className="container">
+      <h1>To Do List</h1>
+      <div className="input-section">
+        <input
+          type="text"
+          value={taskInput}
+          onChange={(e) => setTaskInput(e.target.value)}
+          placeholder="შეიყვანე ახალი დავალება..."
+        />
+        <button onClick={addTask}>დამატება</button>
+      </div>
+      <div className="columns">
+        {/* შესასრულებელი დავალებების სვეტი */}
+        <div className="column">
+          <h2>შესასრულებელი დავალებები</h2>
+          <ul>
+            {toDoTasks.map((task, index) => (
+              <Task
+                key={index}
+                task={task}
+                onComplete={completeTask}
+              />
+            ))}
+          </ul>
+        </div>
+
+        {/* შესრულებული დავალებების სვეტი */}
+        <div className="column">
+          <h2>შესრულებული დავალებები</h2>
+          <ul>
+            {completedTasks.map((task, index) => (
+              <Task
+                key={index}
+                task={task}
+                onReturn={returnToToDo}
+                onDelete={deleteTask}
+              />
+            ))}
+          </ul>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default App;
