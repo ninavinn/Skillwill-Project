@@ -1,0 +1,128 @@
+1. src/components/Header.js:
+
+import React, { useContext } from 'react';
+import { LanguageContext } from '../contexts/LanguageContext';
+
+const Header = () => {
+  const { language, setLanguage } = useContext(LanguageContext);
+
+  return (
+    <div>
+      <h1>{language === 'en' ? 'Todo Application' : 'ტო-დო აპლიკაცია'}</h1>
+      <select onChange={(e) => setLanguage(e.target.value)} value={language}>
+        <option value="en">English</option>
+        <option value="ka">ქართული</option>
+      </select>
+    </div>
+  );
+};
+
+export default Header;
+
+
+
+
+
+2. src/components/Todo.js:
+
+import React, { useState } from 'react';
+
+const Todo = ({ todo, onDelete, onToggle }) => {
+  return (
+    <div>
+      <input
+        type="checkbox"
+        checked={todo.completed}
+        onChange={() => onToggle(todo.id)}
+      />
+      <span>{todo.text}</span>
+      <button onClick={() => onDelete(todo.id)}>Delete</button>
+    </div>
+  );
+};
+
+const TodoList = ({ todos, onDelete, onToggle }) => {
+  return (
+    <div>
+      {todos.map(todo => (
+        <Todo key={todo.id} todo={todo} onDelete={onDelete} onToggle={onToggle} />
+      ))}
+    </div>
+  );
+};
+
+const TodoApp = () => {
+  const [todos, setTodos] = useState([]);
+  const [newTodo, setNewTodo] = useState("");
+
+  const addTodo = () => {
+    setTodos([...todos, { id: Date.now(), text: newTodo, completed: false }]);
+    setNewTodo("");
+  };
+
+  const deleteTodo = (id) => {
+    setTodos(todos.filter(todo => todo.id !== id));
+  };
+
+  const toggleTodo = (id) => {
+    setTodos(todos.map(todo => 
+      todo.id === id ? { ...todo, completed: !todo.completed } : todo
+    ));
+  };
+
+  return (
+    <div>
+      <h1>Todo List</h1>
+      <input
+        type="text"
+        value={newTodo}
+        onChange={(e) => setNewTodo(e.target.value)}
+      />
+      <button onClick={addTodo}>Add Todo</button>
+      <TodoList todos={todos} onDelete={deleteTodo} onToggle={toggleTodo} />
+    </div>
+  );
+};
+
+export default TodoApp;
+
+
+
+
+
+3. src/contexts/LanguageContext.js:
+
+import React, { createContext, useState } from 'react';
+
+export const LanguageContext = createContext();
+
+export const LanguageProvider = ({ children }) => {
+  const [language, setLanguage] = useState('en');
+
+  return (
+    <LanguageContext.Provider value={{ language, setLanguage }}>
+      {children}
+    </LanguageContext.Provider>
+  );
+};
+
+
+
+
+4. src/App.js:
+
+import React from 'react';
+import { LanguageProvider } from './contexts/LanguageContext';
+import Header from './components/Header';
+import TodoApp from './components/Todo';
+
+const App = () => {
+  return (
+    <LanguageProvider>
+      <Header />
+      <TodoApp />
+    </LanguageProvider>
+  );
+};
+
+export default App;
