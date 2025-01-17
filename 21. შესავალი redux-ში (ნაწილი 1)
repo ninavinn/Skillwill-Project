@@ -1,0 +1,231 @@
+1. Redux Action-ები
+src/actions/todoActions.js:
+
+
+export const addTodo = (text) => ({
+  type: 'ADD_TODO',
+  payload: text,
+});
+
+export const deleteTodo = (id) => ({
+  type: 'DELETE_TODO',
+  payload: id,
+});
+
+export const toggleDone = (id) => ({
+  type: 'TOGGLE_DONE',
+  payload: id,
+});
+
+
+
+2. Redux Reducer-ები
+src/reducers/todoReducer.js:
+
+const initialState = {
+  todos: [],
+};
+
+const todoReducer = (state = initialState, action) => {
+  switch (action.type) {
+    case 'ADD_TODO':
+      return {
+        ...state,
+        todos: [
+          ...state.todos,
+          { id: Date.now(), text: action.payload, done: false },
+        ],
+      };
+    case 'DELETE_TODO':
+      return {
+        ...state,
+        todos: state.todos.filter(todo => todo.id !== action.payload),
+      };
+    case 'TOGGLE_DONE':
+      return {
+        ...state,
+        todos: state.todos.map(todo =>
+          todo.id === action.payload ? { ...todo, done: !todo.done } : todo
+        ),
+      };
+    default:
+      return state;
+  }
+};
+
+export default todoReducer;
+
+
+
+src/reducers/rootReducer.js:
+
+javascript
+Копировать
+Редактировать
+import { combineReducers } from 'redux';
+import todoReducer from './todoReducer';
+
+const rootReducer = combineReducers({
+  todo: todoReducer,
+});
+
+export default rootReducer;
+
+
+
+
+
+3. Redux Store
+src/store.js:
+
+import { createStore } from 'redux';
+import rootReducer from './reducers/rootReducer';
+
+const store = createStore(rootReducer);
+
+export default store;
+
+
+4. React-Redux Provider
+src/index.js:
+
+import React from 'react';
+import ReactDOM from 'react-dom';
+import { Provider } from 'react-redux';
+import App from './App';
+import store from './store';
+
+ReactDOM.render(
+  <Provider store={store}>
+    <App />
+  </Provider>,
+  document.getElementById('root')
+);
+
+
+
+
+5. Todo Input კომპონენტი
+src/components/TodoInput.js:
+
+
+import React, { useState } from 'react';
+import { useDispatch } from 'react-redux';
+import { addTodo } from '../actions/todoActions';
+
+const TodoInput = () => {
+  const [text, setText] = useState('');
+  const dispatch = useDispatch();
+
+  const handleAddTodo = () => {
+    if (text.trim()) {
+      dispatch(addTodo(text));
+      setText('');
+    }
+  };
+
+  return (
+    <div>
+      <input
+        type="text"
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        placeholder="Add Todo"
+      />
+      <button onClick={handleAddTodo}>Add</button>
+    </div>
+  );
+};
+
+export default TodoInput;
+
+
+
+6. Todo List კომპონენტი
+src/components/TodoList.js:
+
+import React from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { deleteTodo, toggleDone } from '../actions/todoActions';
+
+const TodoList = () => {
+  const todos = useSelector(state => state.todo.todos);
+  const dispatch = useDispatch();
+
+  const handleDelete = (id) => {
+    dispatch(deleteTodo(id));
+  };
+
+  const handleToggleDone = (id) => {
+    dispatch(toggleDone(id));
+  };
+
+  return (
+    <div>
+      <h2>Todo List</h2>
+      {todos.map(todo => (
+        <div key={todo.id}>
+          <span style={{ textDecoration: todo.done ? 'line-through' : 'none' }}>
+            {todo.text}
+          </span>
+          <button onClick={() => handleToggleDone(todo.id)}>
+            {todo.done ? 'Undo' : 'Done'}
+          </button>
+          <button onClick={() => handleDelete(todo.id)}>Delete</button>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+export default TodoList;
+
+
+
+7. Done Items კომპონენტი
+src/components/DoneItems.js:
+
+
+import React from 'react';
+import { useSelector } from 'react-redux';
+
+const DoneItems = () => {
+  const todos = useSelector(state => state.todo.todos);
+  const doneTodos = todos.filter(todo => todo.done);
+
+  return (
+    <div>
+      <h2>Done Items</h2>
+      {doneTodos.map(todo => (
+        <div key={todo.id}>
+          <span>{todo.text}</span>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+export default DoneItems;
+
+
+
+8. App კომპონენტი
+src/App.js:
+
+import React from 'react';
+import TodoInput from './components/TodoInput';
+import TodoList from './components/TodoList';
+import DoneItems from './components/DoneItems';
+
+const App = () => {
+  return (
+    <div>
+      <h1>Redux Todo App</h1>
+      <TodoInput />
+      <TodoList />
+      <DoneItems />
+    </div>
+  );
+};
+
+export default App;
