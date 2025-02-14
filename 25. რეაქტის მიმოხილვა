@@ -1,0 +1,48 @@
+import React, { useState, lazy, Suspense, useTransition, useDeferredValue, useId } from "react";
+
+// Lazy ჩატვირთვა
+const HeavyComponent = lazy(() => import("./HeavyComponent"));
+
+export default function App() {
+  // 1. Lazy ჩატვირთვა ივენთზე
+  const [showHeavy, setShowHeavy] = useState(false);
+
+  // 2. useTransition() და useDeferredValue()
+  const [query, setQuery] = useState("");
+  const [isPending, startTransition] = useTransition();
+  const deferredQuery = useDeferredValue(query);
+  const filteredData = ["apple", "banana", "grape", "orange"].filter((item) =>
+    item.includes(deferredQuery)
+  );
+
+  // 3. useId() ჰუკი
+  const emailId = useId();
+
+  return (
+    <div>
+      {/* Lazy ჩატვირთვა */}
+      <button onClick={() => setShowHeavy(true)}>Load Heavy Component</button>
+      <Suspense fallback={<div>Loading...</div>}>
+        {showHeavy && <HeavyComponent />}
+      </Suspense>
+
+      {/* ფილტრაცია useTransition & useDeferredValue-ით */}
+      <input
+        type="text"
+        placeholder="Filter items..."
+        onChange={(e) => startTransition(() => setQuery(e.target.value))}
+      />
+      {isPending ? <p>Filtering...</p> : filteredData.map((item) => <p key={item}>{item}</p>)}
+
+      {/* useId() - უნიკალური id-ით მეილის ფორმა */}
+      <form>
+        <label htmlFor={emailId}>Email:</label>
+        <input type="email" id={emailId} />
+      </form>
+      <form>
+        <label htmlFor={emailId}>Email:</label>
+        <input type="email" id={emailId} />
+      </form>
+    </div>
+  );
+}
