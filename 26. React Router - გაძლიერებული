@@ -1,0 +1,71 @@
+import {
+  createBrowserRouter,
+  RouterProvider,
+  Outlet,
+  Link,
+  useLoaderData,
+  Form,
+  redirect
+} from "react-router-dom";
+
+// Layout component
+const Layout = () => (
+  <div>
+    <nav>
+      <Link to="/">Home</Link> | <Link to="/about">About</Link> | <Link to="/users">Users</Link>
+    </nav>
+    <Outlet />
+  </div>
+);
+
+// Loader function
+const usersLoader = async () => {
+  return fetch("https://jsonplaceholder.typicode.com/users").then((res) => res.json());
+};
+
+// Action function
+const userAction = async ({ request }) => {
+  const formData = await request.formData();
+  const newUser = { name: formData.get("name") };
+  console.log("New User Submitted:", newUser);
+  return redirect("/users");
+};
+
+// Pages
+const Home = () => <h1>Home Page</h1>;
+const About = () => <h1>About Page</h1>;
+
+const Users = () => {
+  const users = useLoaderData();
+  return (
+    <div>
+      <h1>Users</h1>
+      <ul>
+        {users.map((user) => (
+          <li key={user.id}>{user.name}</li>
+        ))}
+      </ul>
+      <Form method="post">
+        <input type="text" name="name" placeholder="New user name" required />
+        <button type="submit">Add User</button>
+      </Form>
+    </div>
+  );
+};
+
+// Router configuration
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <Layout />, // Layout wrapper
+    children: [
+      { path: "", element: <Home /> },
+      { path: "about", element: <About /> },
+      { path: "users", element: <Users />, loader: usersLoader, action: userAction },
+    ],
+  },
+]);
+
+export default function App() {
+  return <RouterProvider router={router} />;
+}
