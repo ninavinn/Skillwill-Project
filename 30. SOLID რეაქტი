@@ -1,0 +1,177 @@
+1. // src/contexts/ToDoContext.js
+import React, { createContext, useState, useContext } from 'react';
+import { todoService } from '../services/todoService';
+
+const ToDoContext = createContext();
+
+export const useToDo = () => useContext(ToDoContext);
+
+export const ToDoProvider = ({ children }) => {
+  const [todos, setTodos] = useState(todoService.getTodos());
+
+  const addTodo = (task) => {
+    const newTodos = todoService.addTodo(task, todos);
+    setTodos(newTodos);
+  };
+
+  const toggleComplete = (id) => {
+    const newTodos = todoService.toggleComplete(id, todos);
+    setTodos(newTodos);
+  };
+
+  return (
+    <ToDoContext.Provider value={{ todos, addTodo, toggleComplete }}>
+      {children}
+    </ToDoContext.Provider>
+  );
+};
+
+
+
+2. // src/services/todoService.js
+export const todoService = {
+  getTodos: () => JSON.parse(localStorage.getItem('todos')) || [],
+  
+  addTodo: (task, todos) => {
+    const newTodos = [...todos, { id: Date.now(), task, completed: false }];
+    localStorage.setItem('todos', JSON.stringify(newTodos));
+    return newTodos;
+  },
+
+  toggleComplete: (id, todos) => {
+    const newTodos = todos.map(todo =>
+      todo.id === id ? { ...todo, completed: !todo.completed } : todo
+    );
+    localStorage.setItem('todos', JSON.stringify(newTodos));
+    return newTodos;
+  }
+};
+
+
+
+3.// src/components/ToDoList.js
+import React from 'react';
+import { useToDo } from '../contexts/ToDoContext';
+import ToDoItem from './ToDoItem';
+
+const ToDoList = () => {
+  const { todos } = useToDo();
+
+  return (
+    <ul>
+      {todos.map(todo => (
+        <ToDoItem key={todo.id} todo={todo} />
+      ))}
+    </ul>
+  );
+};
+
+export default ToDoList;
+
+
+
+4. // src/components/ToDoItem.js
+import React from 'react';
+import { useToDo } from '../contexts/ToDoContext';
+
+const ToDoItem = ({ todo }) => {
+  const { toggleComplete } = useToDo();
+
+  return (
+    <li style={{ textDecoration: todo.completed ? 'line-through' : 'none' }}>
+      {todo.task}
+      <button onClick={() => toggleComplete(todo.id)}>
+        {todo.completed ? 'Undo' : 'Complete'}
+      </button>
+    </li>
+  );
+};
+
+export default ToDoItem;
+
+
+
+5. // src/components/AddToDo.js
+import React, { useState } from 'react';
+import { useToDo } from '../contexts/ToDoContext';
+
+const AddToDo = () => {
+  const [task, setTask] = useState('');
+  const { addTodo } = useToDo();
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (task.trim()) {
+      addTodo(task);
+      setTask('');
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input 
+        type="text"
+        value={task}
+        onChange={(e) => setTask(e.target.value)}
+        placeholder="Enter a task"
+      />
+      <button type="submit">Add</button>
+    </form>
+  );
+};
+
+export default AddToDo;
+
+
+
+6. // src/App.js
+import React from 'react';
+import { ToDoProvider } from './contexts/ToDoContext';
+import ToDoList from './components/ToDoList';
+import AddToDo from './components/AddToDo';
+import './styles.scss';
+
+const App = () => {
+  return (
+    <ToDoProvider>
+      <div className="container">
+        <h1>To-Do List</h1>
+        <AddToDo />
+        <ToDoList />
+      </div>
+    </ToDoProvider>
+  );
+};
+
+export default App;
+
+
+7. // src/styles.scss
+$primary-color: #4CAF50;
+$secondary-color: #FF5722;
+
+.container {
+  max-width: 400px;
+  margin: auto;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+button {
+  background-color: $primary-color;
+  border: none;
+  color: white;
+  padding: 5px 10px;
+  margin-left: 10px;
+  cursor: pointer;
+
+  &:hover {
+    background-color: darken($primary-color, 10%);
+  }
+}
+
+input {
+  padding: 5px;
+  border: 1px solid #ccc;
+}
+
