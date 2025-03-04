@@ -1,0 +1,207 @@
+1. // src/contexts/AuthContext.js
+import React, { createContext, useState, useContext } from 'react';
+
+// Auth context
+const AuthContext = createContext();
+
+export const useAuth = () => useContext(AuthContext);
+
+export const AuthProvider = ({ children }) => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  const login = () => setIsAuthenticated(true);
+  const logout = () => setIsAuthenticated(false);
+
+  return (
+    <AuthContext.Provider value={{ isAuthenticated, login, logout }}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+
+
+2. // src/components/ProtectedRoute.js
+import React from 'react';
+import { Route, Redirect } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+
+const ProtectedRoute = ({ component: Component, ...rest }) => {
+  const { isAuthenticated } = useAuth();
+
+  return (
+    <Route
+      {...rest}
+      render={(props) =>
+        isAuthenticated ? <Component {...props} /> : <Redirect to="/login" />
+      }
+    />
+  );
+};
+
+export default ProtectedRoute;
+
+
+
+
+3. // src/components/Layout.js
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+
+const Layout = ({ children }) => {
+  const { isAuthenticated, logout } = useAuth();
+
+  return (
+    <div className="layout">
+      <nav>
+        <Link to="/">Home</Link>
+        {isAuthenticated ? (
+          <>
+            <Link to="/dashboard">Dashboard</Link>
+            <button onClick={logout}>Logout</button>
+          </>
+        ) : (
+          <Link to="/login">Login</Link>
+        )}
+      </nav>
+      <div className="content">{children}</div>
+    </div>
+  );
+};
+
+export default Layout;
+
+
+
+4. // src/App.js
+import React from 'react';
+import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
+import { AuthProvider } from './contexts/AuthContext';
+import Layout from './components/Layout';
+import ProtectedRoute from './components/ProtectedRoute';
+import HomePage from './pages/HomePage';
+import LoginPage from './pages/LoginPage';
+import DashboardPage from './pages/DashboardPage';
+import './App.scss';
+
+const App = () => {
+  return (
+    <AuthProvider>
+      <Router>
+        <Layout>
+          <Switch>
+            <Route exact path="/" component={HomePage} />
+            <Route path="/login" component={LoginPage} />
+            <ProtectedRoute path="/dashboard" component={DashboardPage} />
+          </Switch>
+        </Layout>
+      </Router>
+    </AuthProvider>
+  );
+};
+
+export default App;
+
+
+
+
+5. // src/pages/HomePage.js
+import React from 'react';
+
+const HomePage = () => {
+  return <h1>Welcome to the Home Page</h1>;
+};
+
+export default HomePage;
+
+
+6. // src/pages/LoginPage.js
+import React, { useState } from 'react';
+import { useAuth } from '../contexts/AuthContext';
+
+const LoginPage = () => {
+  const { login } = useAuth();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+
+  const handleLogin = (e) => {
+    e.preventDefault();
+    // ეს ჩვეულებრივ უნდა იყოს API გამოძახება, მაგრამ მარტივად აქ უბრალოდ ლოგინდება
+    login();
+  };
+
+  return (
+    <div>
+      <h1>Login</h1>
+      <form onSubmit={handleLogin}>
+        <input
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+        <button type="submit">Login</button>
+      </form>
+    </div>
+  );
+};
+
+export default LoginPage;
+
+
+
+7. // src/pages/DashboardPage.js
+import React from 'react';
+
+const DashboardPage = () => {
+  return <h1>Welcome to your Dashboard</h1>;
+};
+
+export default DashboardPage;
+
+
+8. // src/App.scss
+$primary-color: #4CAF50;
+$secondary-color: #FF5722;
+
+.layout {
+  font-family: Arial, sans-serif;
+  
+  nav {
+    background-color: $primary-color;
+    padding: 10px;
+
+    a {
+      color: white;
+      margin-right: 15px;
+      text-decoration: none;
+
+      &:hover {
+        color: $secondary-color;
+      }
+    }
+
+    button {
+      background-color: $secondary-color;
+      border: none;
+      color: white;
+      cursor: pointer;
+
+      &:hover {
+        background-color: darken($secondary-color, 10%);
+      }
+    }
+  }
+
+  .content {
+    padding: 20px;
+  }
+}
+
