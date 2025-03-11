@@ -1,0 +1,153 @@
+1. Redux Store-ის შექმნა
+src/redux/store.js
+
+
+import { configureStore } from "@reduxjs/toolkit";
+import counterReducer from "./slices/counterSlice";
+
+const store = configureStore({
+  reducer: {
+    counter: counterReducer,
+  },
+});
+
+export default store;
+
+
+
+
+2. სინქრონული Action-ები
+src/redux/slices/counterSlice.js
+
+
+import { createSlice } from "@reduxjs/toolkit";
+
+const counterSlice = createSlice({
+  name: "counter",
+  initialState: { value: 0 },
+  reducers: {
+    increment: (state) => {
+      state.value += 1;
+    },
+    decrement: (state) => {
+      state.value -= 1;
+    },
+    incrementByAmount: (state, action) => {
+      state.value += action.payload;
+    },
+  },
+});
+
+export const { increment, decrement, incrementByAmount } = counterSlice.actions;
+export default counterSlice.reducer;
+
+
+
+
+3. ასინქრონული Action-ები (Thunk)
+src/redux/slices/dataSlice.js
+
+
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import axios from "axios";
+
+export const fetchData = createAsyncThunk("data/fetchData", async () => {
+  const response = await axios.get("https://jsonplaceholder.typicode.com/posts");
+  return response.data;
+});
+
+const dataSlice = createSlice({
+  name: "data",
+  initialState: { items: [], status: "idle" },
+  reducers: {},
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchData.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(fetchData.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        state.items = action.payload;
+      })
+      .addCase(fetchData.rejected, (state) => {
+        state.status = "failed";
+      });
+  },
+});
+
+export default dataSlice.reducer;
+
+
+
+4. src/redux/store.js (განახლება)
+
+import { configureStore } from "@reduxjs/toolkit";
+import counterReducer from "./slices/counterSlice";
+import dataReducer from "./slices/dataSlice";
+
+const store = configureStore({
+  reducer: {
+    counter: counterReducer,
+    data: dataReducer,
+  },
+});
+
+export default store;
+
+
+
+
+
+5. Store-ის გამოყენება აპლიკაციაში
+ src/main.jsx
+
+
+import React from "react";
+import ReactDOM from "react-dom/client";
+import { Provider } from "react-redux";
+import store from "./redux/store";
+import App from "./App";
+
+ReactDOM.createRoot(document.getElementById("root")).render(
+  <Provider store={store}>
+    <App />
+  </Provider>
+);
+
+
+
+
+
+6.  Redux-ის გამოყენება კომპონენტში
+ src/App.jsx
+
+import { useDispatch, useSelector } from "react-redux";
+import { increment, decrement } from "./redux/slices/counterSlice";
+import { fetchData } from "./redux/slices/dataSlice";
+
+function App() {
+  const dispatch = useDispatch();
+  const count = useSelector((state) => state.counter.value);
+  const { items, status } = useSelector((state) => state.data);
+
+  return (
+    <div>
+      <h1>Count: {count}</h1>
+      <button onClick={() => dispatch(increment())}>+</button>
+      <button onClick={() => dispatch(decrement())}>-</button>
+
+      <h2>Data Fetching</h2>
+      <button onClick={() => dispatch(fetchData())}>Fetch Data</button>
+      {status === "loading" && <p>Loading...</p>}
+      {status === "succeeded" && (
+        <ul>
+          {items.slice(0, 5).map((item) => (
+            <li key={item.id}>{item.title}</li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+export default App;
