@@ -1,0 +1,171 @@
+1. Mutation-ის Error Handling – updateGame მეთოდში დავამატე შეცდომის გადასაჭრელად(თუ თამაში ვერ მოიძებნა, სერვერი გამოიტანოს შესაბამისი შეცდომა.)
+
+if (!updatedGame) throw new Error("Game not found");
+
+2. Mutation-ის ფუნქციების ჩამოყალიბება – addGame, deleteGame და updateGame მეთოდებს შევქმენი უკეთესი სტრუქტურა, რომ Apollo Server-სთან უკეთ მუშაობდეს.
+
+3. Apollo Server-ის კონფიგურაცია – სერვერის startStandaloneServer მეთოდის კონფიგურაცია დავამატე:
+
+const { url } = await startStandaloneServer(server, {
+  listen: { port: 4000 }
+});
+
+4. Resolvers-ის განახლება – Query, Mutation, და თითოეული ტიპის (Game, Review, Author) რეზოლვერები გავაუმჯობესე Apollo Server-ისთვის.
+
+5. Server-ის გაშვების ინსტრუქცია – დავამატე ინსტრუქცია სერვერის გაშვებისთვის:
+
+node index.js
+
+6. Mutation-ის ტესტირება Apollo Playground-ით – დავამატე მაგალითები addGame, updateGame, და deleteGame Mutation-ებისთვის.
+
+
+
+
+
+1. _db.js
+
+let games = [
+  { id: "1", title: "Zelda, Tears of the Kingdom", platform: ["Switch"] },
+  { id: "2", title: "Final Fantasy 7 Remake", platform: ["PS5", "Xbox"] },
+  { id: "3", title: "Elden Ring", platform: ["PS5", "Xbox", "PC"] },
+  { id: "4", title: "Mario Kart", platform: ["Switch"] },
+  { id: "5", title: "Pokemon Scarlet", platform: ["PS5", "Xbox", "PC"] },
+];
+
+let authors = [
+  { id: "1", name: "Mario", verified: true },
+  { id: "2", name: "Yoshi", verified: false },
+  { id: "3", name: "Peach", verified: true },
+];
+
+let reviews = [
+  { id: "1", rating: 9, content: "Great game!", author_id: "1", game_id: "2" },
+  { id: "2", rating: 10, content: "Amazing experience!", author_id: "2", game_id: "1" },
+  { id: "3", rating: 7, content: "Good but challenging.", author_id: "3", game_id: "3" },
+  { id: "4", rating: 5, content: "Not my type.", author_id: "2", game_id: "4" },
+  { id: "5", rating: 8, content: "Very enjoyable!", author_id: "2", game_id: "5" },
+  { id: "6", rating: 7, content: "Nice!", author_id: "1", game_id: "2" },
+  { id: "7", rating: 10, content: "Masterpiece!", author_id: "3", game_id: "1" },
+];
+
+export default { games, authors, reviews };
+
+
+
+
+2. schema.js
+
+export const typeDefs = `#graphql
+  type Game {
+    id: ID!
+    title: String!
+    platform: [String!]!
+    reviews: [Review!]
+  }
+  
+  type Review {
+    id: ID!
+    rating: Int!
+    content: String!
+    author: Author!
+    game: Game!
+  }
+  
+  type Author {
+    id: ID!
+    name: String!
+    verified: Boolean!
+    reviews: [Review!]
+  }
+  
+  type Query {
+    games: [Game]
+    game(id: ID!): Game
+    reviews: [Review]
+    review(id: ID!): Review
+    authors: [Author]
+    author(id: ID!): Author
+  }
+  
+  type Mutation {
+    addGame(game: AddGameInput!): Game
+    deleteGame(id: ID!): [Game]
+    updateGame(id: ID!, edits: EditGameInput): Game
+  }
+  
+  input AddGameInput {
+    title: String!
+    platform: [String!]!
+  }
+  
+  input EditGameInput {
+    title: String
+    platform: [String!]
+  }
+`;
+
+
+
+
+
+3. resolvers.js
+
+import db from "./_db.js";
+
+export const resolvers = {
+  Query: {
+    games: () => db.games,
+    game: (_, { id }) => db.games.find((g) => g.id === id),
+    authors: () => db.authors,
+    author: (_, { id }) => db.authors.find((a) => a.id === id),
+    reviews: () => db.reviews,
+    review: (_, { id }) => db.reviews.find((r) => r.id === id),
+  },
+  Game: {
+    reviews: (parent) => db.reviews.filter((r) => r.game_id === parent.id),
+  },
+  Review: {
+    author: (parent) => db.authors.find((a) => a.id === parent.author_id),
+    game: (parent) => db.games.find((g) => g.id === parent.game_id),
+  },
+  Author: {
+    reviews: (parent) => db.reviews.filter((r) => r.author_id === parent.id),
+  },
+  Mutation: {
+    addGame: (_, { game }) => {
+      const newGame = { id: String(Math.floor(Math.random() * 10000)), ...game };
+      db.games.push(newGame);
+      return newGame;
+    },
+    deleteGame: (_, { id }) => {
+      db.games = db.games.filter((g) => g.id !== id);
+      return db.games;
+    },
+    updateGame: (_, { id, edits }) => {
+      const gameIndex = db.games.findIndex((g) => g.id === id);
+      if (gameIndex === -1) throw new Error("Game not found");
+      
+      db.games[gameIndex] = { ...db.games[gameIndex], ...edits };
+      return db.games[gameIndex];
+    },
+  },
+};
+
+
+
+
+
+4. index.js
+
+import { ApolloServer } from "@apollo/server";
+import { startStandaloneServer } from "@apollo/server/standalone";
+import { typeDefs } from "./schema.js";
+import { resolvers } from "./resolvers.js";
+
+const server = new ApolloServer({ typeDefs, resolvers });
+
+const { url } = await startStandaloneServer(server, {
+  listen: { port: 4000 },
+});
+
+console.log(`🚀 Server ready at ${url}`);
