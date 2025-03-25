@@ -1,0 +1,79 @@
+// src/components/Counter.js
+import { useState } from "react";
+
+export function Counter() {
+  const [count, setCount] = useState(0);
+
+  return (
+    <div>
+      <p data-testid="count">Count: {count}</p>
+      <button onClick={() => setCount(count + 1)}>Increment</button>
+    </div>
+  );
+}
+
+// src/hooks/useToggle.js
+import { useState } from "react";
+
+export function useToggle(initialState = false) {
+  const [state, setState] = useState(initialState);
+  const toggle = () => setState((prev) => !prev);
+  return [state, toggle];
+}
+
+// src/components/LoginForm.js
+import { useState } from "react";
+
+export function LoginForm({ onSubmit }) {
+  const [username, setUsername] = useState("");
+
+  return (
+    <form onSubmit={(e) => { e.preventDefault(); onSubmit(username); }}>
+      <input 
+        data-testid="username-input"
+        type="text" 
+        value={username} 
+        onChange={(e) => setUsername(e.target.value)}
+      />
+      <button type="submit">Login</button>
+    </form>
+  );
+}
+
+// __tests__/Counter.test.js
+import { render, screen, fireEvent } from "@testing-library/react";
+import { Counter } from "../components/Counter";
+
+test("renders Counter component", () => {
+  render(<Counter />);
+  const countElement = screen.getByTestId("count");
+  expect(countElement).toBeInTheDocument();
+  fireEvent.click(screen.getByText("Increment"));
+  expect(countElement).toHaveTextContent("Count: 1");
+});
+
+// __tests__/useToggle.test.js
+import { renderHook, act } from "@testing-library/react";
+import { useToggle } from "../hooks/useToggle";
+
+test("toggles state", () => {
+  const { result } = renderHook(() => useToggle());
+  expect(result.current[0]).toBe(false);
+  act(() => result.current[1]());
+  expect(result.current[0]).toBe(true);
+});
+
+// __tests__/LoginForm.test.js
+import { render, screen, fireEvent } from "@testing-library/react";
+import { LoginForm } from "../components/LoginForm";
+
+test("renders LoginForm and submits username", () => {
+  const handleSubmit = jest.fn();
+  render(<LoginForm onSubmit={handleSubmit} />);
+  
+  const input = screen.getByTestId("username-input");
+  fireEvent.change(input, { target: { value: "testuser" } });
+  fireEvent.click(screen.getByText("Login"));
+  
+  expect(handleSubmit).toHaveBeenCalledWith("testuser");
+});
