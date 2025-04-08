@@ -1,0 +1,77 @@
+1.
+import { useQuery } from '@tanstack/react-query';
+
+interface User {
+  id: number;
+  name: string;
+  email: string;
+}
+
+const fetchUsers = async (): Promise<User[]> => {
+  const res = await fetch('https://jsonplaceholder.typicode.com/users');
+  return res.json();
+};
+
+const fetchUser = async (id: number): Promise<User> => {
+  const res = await fetch(`https://jsonplaceholder.typicode.com/users/${id}`);
+  return res.json();
+};
+
+export const useUsers = () => {
+  return useQuery(['users'], fetchUsers);
+};
+
+export const useUser = (id: number) => {
+  return useQuery(['user', id], () => fetchUser(id));
+};
+
+2.
+import React, { useState } from 'react';
+import { useUsers, useUser } from './hooks/useUsers';
+
+const App: React.FC = () => {
+  const { data: users, isLoading } = useUsers();
+  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
+  const { data: user, isLoading: userLoading } = useUser(selectedUserId || 0);
+
+  if (isLoading) return <div>Loading users...</div>;
+
+  return (
+    <div>
+      <h1>Users</h1>
+      <ul>
+        {users?.map((user) => (
+          <li key={user.id} onClick={() => setSelectedUserId(user.id)}>
+            {user.name}
+          </li>
+        ))}
+      </ul>
+
+      {selectedUserId && userLoading && <div>Loading user details...</div>}
+
+      {user && !userLoading && (
+        <div>
+          <h2>{user.name}</h2>
+          <p>Email: {user.email}</p>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default App;
+
+3.
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import './index.css';
+import App from './App';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
+const queryClient = new QueryClient();
+
+ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
+  <QueryClientProvider client={queryClient}>
+    <App />
+  </QueryClientProvider>
+);
