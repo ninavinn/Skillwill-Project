@@ -1,0 +1,95 @@
+1.
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+
+interface User {
+  id: number;
+  name: string;
+  email: string;
+}
+
+const fetchUsers = async (): Promise<User[]> => {
+  const res = await fetch('https://jsonplaceholder.typicode.com/users');
+  return res.json();
+};
+
+const fetchUser = async (id: number): Promise<User> => {
+  const res = await fetch(`https://jsonplaceholder.typicode.com/users/${id}`);
+  return res.json();
+};
+
+const updateUser = async (user: User): Promise<User> => {
+  const res = await fetch(`https://jsonplaceholder.typicode.com/users/${user.id}`, {
+    method: 'PUT',
+    body: JSON.stringify(user),
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+  return res.json();
+};
+
+export const useUsers = () => {
+  return useQuery(['users'], fetchUsers);
+};
+
+export const useUser = (id: number) => {
+  return useQuery(['user', id], () => fetchUser(id));
+};
+
+// New hook for updating the user
+export const useUpdateUser = () => {
+  const queryClient = useQueryClient();
+  return useMutation(updateUser, {
+    onSuccess: () => {
+      // Invalidates the user query to refetch data after the update
+      queryClient.invalidateQueries(['user']);
+      queryClient.invalidateQueries(['users']);
+    },
+  });
+};
+
+
+2. 
+import React, { useState } from 'react';
+import { useUsers, useUser, useUpdateUser } from './hooks/useUsers';
+
+const App: React.FC = () => {
+  const { data: users, isLoading } = useUsers();
+  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
+  const { data: user, isLoading: userLoading } = useUser(selectedUserId || 0);
+  const { mutate: updateUser } = useUpdateUser();
+
+  const handleUpdateUser = (id: number) => {
+    if (user) {
+      const updatedUser = { ...user, name: `${user.name} Updated` }; // Example update
+      updateUser(updatedUser);
+    }
+  };
+
+  if (isLoading) return <div>Loading users...</div>;
+
+  return (
+    <div>
+      <h1>Users</h1>
+      <ul>
+        {users?.map((user) => (
+          <li key={user.id} onClick={() => setSelectedUserId(user.id)}>
+            {user.name}
+          </li>
+        ))}
+      </ul>
+
+      {selectedUserId && userLoading && <div>Loading user details...</div>}
+
+      {user && !userLoading && (
+        <div>
+          <h2>{user.name}</h2>
+          <p>Email: {user.email}</p>
+          <button onClick={() => handleUpdateUser(user.id)}>Update User</button>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default App;
