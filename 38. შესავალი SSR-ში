@@ -1,0 +1,69 @@
+dashboard/layout.tsx
+
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <div>
+      <h1>Dashboard Layout</h1>
+      {children}
+    </div>
+  );
+}
+
+
+
+
+ dashboard/loading.tsx
+
+export default function Loading() {
+  return <p>Dashboard Loading...</p>;
+}
+
+
+
+
+dashboard/not-found.tsx
+
+export default function NotFound() {
+  return <p>Dashboard Not Found</p>;
+}
+
+
+
+
+dashboard/page.tsx
+
+export default function DashboardPage() {
+  return <p>Dashboard Home Page</p>;
+}
+
+
+
+
+users/[id]/page.tsx
+
+'use client';
+
+import { useParams } from 'next/navigation';
+
+export default function UserDetails() {
+  const params = useParams();
+  const { id } = params;
+
+  return <p>User ID: {id}</p>;
+}
+
+
+
+
+import { notFound } from 'next/navigation';
+
+export default function UserDetails() {
+  const params = useParams();
+  const { id } = params;
+
+  if (id === '123') {
+    notFound();
+  }
+
+  return <p>User ID: {id}</p>;
+}
