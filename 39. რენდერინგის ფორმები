@@ -1,0 +1,89 @@
+index.js — SSG
+
+// pages/index.js
+export async function getStaticProps() {
+  return {
+    props: {
+      message: "ეს სტატიკურად გენერირებული გვერდია (SSG)",
+    },
+  };
+}
+
+export default function Home({ message }) {
+  return <h1>{message}</h1>;
+}
+
+
+
+
+about.js — ISR (revalidate: 10 წამში ერთხელ განახლდება)
+
+// pages/about.js
+export async function getStaticProps() {
+  return {
+    props: {
+      info: "ეს გვერდი იყენებს ISR-ს (revalidate 10 წამში)",
+    },
+    revalidate: 10,
+  };
+}
+
+export default function About({ info }) {
+  return <h1>{info}</h1>;
+}
+
+
+
+ blog/index.js — SSG
+
+// pages/blog/index.js
+export async function getStaticProps() {
+  const posts = [
+    { id: 1, title: "პოსტი 1" },
+    { id: 2, title: "პოსტი 2" },
+  ];
+
+  return {
+    props: { posts },
+  };
+}
+
+export default function Blog({ posts }) {
+  return (
+    <div>
+      <h1>ბლოგი</h1>
+      <ul>
+        {posts.map((post) => (
+          <li key={post.id}>
+            <a href={`/blog/${post.id}`}>{post.title}</a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+
+
+blog/[id].js — SSR
+
+// pages/blog/[id].js
+export async function getServerSideProps(context) {
+  const { id } = context.params;
+
+  // ვთავსობთ ფიქსირებულ ინფორმაციას
+  const post = { id, title: `დეტალები პოსტისთვის #${id}` };
+
+  return {
+    props: { post },
+  };
+}
+
+export default function BlogPost({ post }) {
+  return (
+    <div>
+      <h1>{post.title}</h1>
+      <p>ეს გვერდი გენერირდება ყოველ request-ზე (SSR)</p>
+    </div>
+  );
+}
