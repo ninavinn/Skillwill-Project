@@ -1,4 +1,4 @@
-Backend (backend/index.js):
+1. Backend (backend/index.js)
 
 const express = require('express');
 const app = express();
@@ -14,36 +14,58 @@ app.listen(PORT, () => {
 
 
 
-Backend Dockerfile (backend/Dockerfile):
+2. Backend-ის package.json (backend/package.json)
+
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "main": "index.js",
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
+
+
+
+3. Backend Dockerfile (backend/Dockerfile)
 
 FROM node:18
 WORKDIR /app
+COPY package.json .
+RUN npm install
 COPY . .
-RUN npm init -y
-RUN npm install express
 EXPOSE 5000
 CMD ["node", "index.js"]
 
 
 
-Frontend Dockerfile (frontend/Dockerfile):
+
+4. Frontend
+
+npx create-react-app frontend
+
+
+
+5. Frontend Dockerfile (frontend/Dockerfile)
 
 FROM node:18
 WORKDIR /app
+COPY package.json .
+COPY package-lock.json .
+RUN npm install
 COPY . .
-RUN npx create-react-app frontend-app
-WORKDIR /app/frontend-app
 RUN npm run build
+RUN npm install -g serve
 EXPOSE 3000
-CMD ["npx", "serve", "-s", "build"]
+CMD ["serve", "-s", "build", "-l", "3000"]
 
 
 
 
+6. docker-compose.yml
 
-docker-compose.yml:
+version: '3.8'
 
-version: '3'
 services:
   backend:
     build: ./backend
@@ -63,3 +85,4 @@ services:
 
 networks:
   app-network:
+    driver: bridge
