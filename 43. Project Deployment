@@ -1,0 +1,68 @@
+Navbar.jsx
+
+import React from 'react';
+import { Stack, Button, useMediaQuery } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
+
+const Navbar = ({ orientation = 'horizontal', items = [], onItemClick }) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
+  const direction = isMobile ? 'column' : orientation === 'vertical' ? 'column' : 'row';
+
+  return (
+    <Stack
+      direction={direction}
+      spacing={2}
+      sx={{
+        padding: 2,
+        backgroundColor: 'primary.main',
+        color: 'white',
+        alignItems: direction === 'column' ? 'flex-start' : 'center',
+      }}
+    >
+      {items.map((item, index) => (
+        <Button
+          key={index}
+          startIcon={item.icon}
+          onClick={() => onItemClick?.(item)}
+          sx={{ color: 'white', textTransform: 'none' }}
+        >
+          {item.label}
+        </Button>
+      ))}
+    </Stack>
+  );
+};
+
+export default Navbar;
+
+
+
+
+
+
+
+import React from 'react';
+import Navbar from './Navbar';
+import HomeIcon from '@mui/icons-material/Home';
+import InfoIcon from '@mui/icons-material/Info';
+import ContactMailIcon from '@mui/icons-material/ContactMail';
+
+const items = [
+  { label: 'მთავარი', path: '/', icon: <HomeIcon /> },
+  { label: 'ჩვენს შესახებ', path: '/about', icon: <InfoIcon /> },
+  { label: 'კონტაქტი', path: '/contact', icon: <ContactMailIcon /> },
+];
+
+const App = () => {
+  const handleNavClick = (item) => {
+    console.log('გადაყვანა:', item.path);
+  };
+
+  return (
+    <Navbar orientation="horizontal" items={items} onItemClick={handleNavClick} />
+  );
+};
+
+export default App;
