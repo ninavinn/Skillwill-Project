@@ -1,0 +1,25 @@
+// App.js ან App.tsx
+
+import React from 'react';
+import { View, Text, Image, TextInput, Button, StyleSheet } from 'react-native';
+
+export default function App() {
+  return (
+    <View style={styles.container}>
+      <Image source={{ uri: 'https://upload.wikimedia.org/wikipedia/commons/a/a5/Instagram_icon.png' }} style={styles.logo} />
+      <Text style={styles.title}>Welcome to Instagram</Text>
+      <TextInput style={styles.input} placeholder="Phone number, username, or email" />
+      <TextInput style={styles.input} placeholder="Password" secureTextEntry />
+      <Button title="Log In" onPress={() => {}} />
+      <Text style={styles.footer}>Don’t have an account? Sign up</Text>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
+  logo: { width: 100, height: 100, marginBottom: 20 },
+  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 20 },
+  input: { width: '100%', borderColor: '#ccc', borderWidth: 1, padding: 10, borderRadius: 5, marginBottom: 10 },
+  footer: { marginTop: 20, color: 'blue' }
+});
