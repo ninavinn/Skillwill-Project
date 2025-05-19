@@ -1,0 +1,43 @@
+import { useState } from "react";
+
+const ContactList = () => {
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const contacts = [
+    { id: 1, name: "Giorgi" },
+    { id: 2, name: "Nino" },
+    { id: 3, name: "Luka" },
+  ];
+
+
+  const filteredContacts = contacts.filter(contact =>
+    contact.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  return (
+    <div>
+      <h2>კონტაქტები</h2>
+
+      <input
+        type="text"
+        placeholder="ძებნა კონტაქტებში..."
+        value={searchTerm}
+        onChange={e => setSearchTerm(e.target.value)} // ტექსტის ცვლილებისას განახლდეს searchTerm
+      />
+
+      {/* თუ filteredContacts ცარიელია, ვაჩვენოთ შესაბამისი მესიჯი */}
+      {filteredContacts.length === 0 ? (
+        <p>ვერ მოიძებნა კონტაქტი</p>
+      ) : (
+     
+        <ul>
+          {filteredContacts.map(contact => (
+            <li key={contact.id}>{contact.name}</li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+};
+
+export default ContactList;
