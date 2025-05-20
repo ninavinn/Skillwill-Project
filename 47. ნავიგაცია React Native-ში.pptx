@@ -1,0 +1,117 @@
+app.js
+
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import Sidebar from './components/Sidebar';
+import Chats from './pages/Chats';
+import Updates from './pages/Updates';
+import Communities from './pages/Communities';
+import Calls from './pages/Calls';
+import './styles/App.css';
+
+function App() {
+  return (
+    <Router>
+      <div className="app-container">
+        <Sidebar />
+        <div className="main-content">
+          <Routes>
+            <Route path="/" element={<Navigate to="/chats" />} />
+            <Route path="/chats" element={<Chats />} />
+            <Route path="/updates" element={<Updates />} />
+            <Route path="/communities" element={<Communities />} />
+            <Route path="/calls" element={<Calls />} />
+          </Routes>
+        </div>
+      </div>
+    </Router>
+  );
+}
+
+export default App;
+
+
+
+sidebar.js
+
+import React from 'react';
+import { NavLink } from 'react-router-dom';
+import { FaCommentDots, FaRegCircle, FaUsers, FaPhone } from 'react-icons/fa6';
+
+const Sidebar = () => {
+  return (
+    <div className="sidebar">
+      <NavLink to="/chats" className="nav-item">
+        <FaCommentDots />
+        <span>Chats</span>
+      </NavLink>
+      <NavLink to="/updates" className="nav-item">
+        <FaRegCircle />
+        <span>Updates</span>
+      </NavLink>
+      <NavLink to="/communities" className="nav-item">
+        <FaUsers />
+        <span>Communities</span>
+      </NavLink>
+      <NavLink to="/calls" className="nav-item">
+        <FaPhone />
+        <span>Calls</span>
+      </NavLink>
+    </div>
+  );
+};
+
+export default Sidebar;
+
+
+app.css
+
+.app-container {
+  display: flex;
+  height: 100vh;
+  flex-direction: column;
+}
+
+.main-content {
+  flex: 1;
+  background-color: #f0f2f5;
+  padding: 16px;
+}
+
+.sidebar {
+  display: flex;
+  justify-content: space-around;
+  background-color: #ffffff;
+  border-top: 1px solid #ccc;
+  padding: 8px 0;
+}
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #888;
+  text-decoration: none;
+  font-size: 12px;
+}
+
+.nav-item svg {
+  font-size: 20px;
+  margin-bottom: 4px;
+}
+
+.nav-item.active {
+  color: #25D366;
+}
+
+
+
+Chats.js, Updates.js
+
+import React from 'react';
+
+const Chats = () => {
+  return <div>Chats Screen</div>;
+};
+
+export default Chats;
